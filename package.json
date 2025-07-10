@@ -1,10 +1,11 @@
 {
   "name": "email-sender-cli",
   "version": "1.0.0",
-  "description": "An email sender to automate BSB emails",
+  "description": "An email CLI tool for sending emails with HTML templates",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "send": "ts-node src/index.ts"
   },
   "keywords": [
     "email",
@@ -14,10 +15,13 @@
   "author": "Jummer Ramos",
   "license": "MIT",
   "dependencies": {
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "nodemailer": "^7.0.5"
   },
   "devDependencies": {
     "@types/node": "^24.0.12",
+    "@types/nodemailer": "^6.4.17",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
 }
