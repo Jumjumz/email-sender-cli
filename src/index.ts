@@ -1,8 +1,8 @@
-import { Command, program } from "commander";
+import { Command } from "commander";
 import nodemailer from "nodemailer";
 import fs from "fs";
-import path, { resolve } from "path";
-import { text } from "stream/consumers";
+import path from "path";
+import "dotenv/config";
 
 interface From {
   name: string;
@@ -103,9 +103,72 @@ class SendEmailCLI {
     }
   }
 
-  private async validateCommand(options: CLIOptions): Promise<void> {}
+  private async validateCommand(options: CLIOptions): Promise<void> {
+    try {
+      console.log("Validating files...");
 
-  private async configCommand(): Promise<void> {}
+      const emailData = this.loadEmailData(options.data);
+
+      console.log(
+        `Data file is valid: ${emailData.recipients.length} recipients found`
+      );
+
+      const htmlTemplate = this.loadHTMLTempalte(options.template);
+
+      console.log("Template file is valid");
+
+      console.log("\nPreview of first recipient:\n\n");
+
+      const firstRecipient = emailData.recipients[0];
+      const renderedContent = this.applyVariables(
+        htmlTemplate,
+        firstRecipient,
+        emailData.from
+      );
+      const renderedSubject = this.applyVariables(
+        emailData.subject,
+        firstRecipient,
+        emailData.from
+      );
+
+      console.log("From", emailData.from.email);
+      console.log("Subject:", renderedSubject);
+      console.log("To:", firstRecipient.email);
+      console.log(renderedContent);
+      console.log("\nAll files are valid and ready to send!");
+    } catch (error) {
+      console.error(
+        "Validation Failed: ",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+      process.exit(1);
+    }
+  }
+
+  private configCommand(): void {
+    console.log("Current SMTP configurations:\n");
+
+    const user = process.env.SMTP_USER;
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
+    const port = process.env.SMTP_PORT || "587";
+    const hasPassword = !!process.env.SMTP_PASS;
+
+    console.log(`Host: ${host}`);
+    console.log(`Port: ${port}`);
+    console.log(`User: ${user || "Not set"}`);
+    console.log(`Password: ${hasPassword ? "Set" : "Not set"}`);
+
+    if (!user || !hasPassword) {
+      console.log("\nMissing required environment variables:");
+      if (!user) console.log("   - SMTP_USER");
+      if (!hasPassword) console.log("   - SMTP_PASS");
+      console.log("\nSet them with:");
+      console.log('export SMTP_USER="your-email@gmail.com"');
+      console.log('export SMTP_PASS="your-app-password"');
+    } else {
+      console.log("\nSMTP configuration is complete!");
+    }
+  }
 
   private async sendEmails(
     emailData: EmailData,
@@ -178,7 +241,6 @@ class SendEmailCLI {
     console.log(`From: ${emailData.from.name} <${emailData.from.email}>`);
     console.log(`Recipients: ${emailData.recipients.length}\n`);
 
-    // Show preview of first recipient
     const firstRecipient = emailData.recipients[0];
     const renderedContent = this.applyVariables(
       htmlTemplate,
@@ -196,7 +258,7 @@ class SendEmailCLI {
     console.log(`Subject: ${renderedSubject}`);
     console.log("HTML Content:");
     console.log(renderedContent);
-    console.log("\n--- End Preview ---");
+    console.log("\n\n--- End Preview ---");
 
     console.log(
       `\n Ready to send to ${emailData.recipients.length} recipients.`
