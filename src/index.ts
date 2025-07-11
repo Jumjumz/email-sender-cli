@@ -187,7 +187,7 @@ class SendEmailCLI {
 
     await transporter.verify();
 
-    console.log("SMTP connection verifiedm");
+    console.log("SMTP connection verified");
 
     let successCount = 0;
     let failedCount = 0;
